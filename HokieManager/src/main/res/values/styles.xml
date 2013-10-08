@@ -11,6 +11,7 @@
             backward-compatibility can go here.
         -->
     </style>
+    <style name="AppBaseTheme.NoTitleBar" parent="android:Theme.NoTitleBar"></style>
 
     <!-- Application theme. -->
     <style name="AppTheme" parent="AppBaseTheme">
