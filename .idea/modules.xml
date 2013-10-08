@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/HokieManager/HokieManager.iml" filepath="$PROJECT_DIR$/HokieManager/HokieManager.iml" />
+      <module fileurl="file://$PROJECT_DIR$/HokieManagerProject.iml" filepath="$PROJECT_DIR$/HokieManagerProject.iml" />
+    </modules>
+  </component>
+</project>
+
