@@ -12,7 +12,6 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
-
 import javax.net.ssl.HttpsURLConnection;
 
 /**
@@ -27,6 +26,7 @@ public class CentralAuthenticationService {
 
     private String username_;
     private String password_;
+    private HashMap<String,String> cookiesCAS_ = new HashMap<String,String>();
 
     public CentralAuthenticationService(String username, String password){
         username_ = username;
@@ -42,7 +42,6 @@ public class CentralAuthenticationService {
 
     private boolean login() throws IOException {
         String redirectURL, newCookie, pageHtml;
-        ArrayList<String> casCookies = new ArrayList<String>();
 
         // Redirect 1
         HttpsURLConnection connection = (HttpsURLConnection)(new URL(LOGIN_URL).openConnection());
@@ -50,7 +49,7 @@ public class CentralAuthenticationService {
         connection.connect();
 
         newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
-        casCookies.add(newCookie.substring(0,newCookie.indexOf(";")));
+        cookiesCAS_.put(newCookie.substring(0,newCookie.indexOf("=")),newCookie.substring(0,newCookie.indexOf(";")));
 
         redirectURL = connection.getHeaderField("Location");
         Log.i("URL", redirectURL);
@@ -58,7 +57,7 @@ public class CentralAuthenticationService {
 
         // Redirect 2
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
-        connection.setRequestProperty("Cookie", casCookies.get(0));
+        connection.setRequestProperty("Cookie", cookiesCAS_.get("JSESSIONID"));
         connection.connect();
 
         pageHtml = getHTML(connection);
@@ -69,7 +68,7 @@ public class CentralAuthenticationService {
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        connection.setRequestProperty("Cookie", casCookies.get(0));
+        connection.setRequestProperty("Cookie", cookiesCAS_.get("JSESSIONID"));
         connection.setRequestProperty("User-Agent", USER_AGENT);
         connection.connect();
 
@@ -84,10 +83,12 @@ public class CentralAuthenticationService {
         outputStream.close();
 
         newCookie = connection.getHeaderFields().get("Set-Cookie").get(1).toString();
-        casCookies.add(newCookie.substring(0, newCookie.indexOf(";")));
+        cookiesCAS_.put(newCookie.substring(0,newCookie.indexOf("=")),newCookie.substring(0,newCookie.indexOf(";")));
 
         connection.disconnect();
 
+
+        HashMap<String,String> cookiesScholar = new HashMap<String,String>();
         // Redirect 3 SCHOLAR
         connection = (HttpsURLConnection)(new URL("https://scholar.vt.edu/portal/login").openConnection());
         connection.setInstanceFollowRedirects(false);
@@ -97,14 +98,9 @@ public class CentralAuthenticationService {
 
         redirectURL = connection.getHeaderField("Location");
 
-        newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
-        casCookies.add(newCookie.substring(0,newCookie.indexOf(";")));  //scholar.vt.edu.JSESSIONID
-
-        newCookie = connection.getHeaderFields().get("Set-Cookie").get(1).toString();
-        casCookies.add(newCookie.substring(0,newCookie.indexOf(";")));  //lb-scholar.vt.edu
-
-        newCookie = connection.getHeaderFields().get("Set-Cookie").get(2).toString();
-        casCookies.add(newCookie.substring(0,newCookie.indexOf(";")));  //expire-scholar
+        // Add the following cookies: scholar.vt.edu.JSESSIONID, lb-scholar.vt.edu, expire-scholar
+        for(String cookie : connection.getHeaderFields().get("Set-Cookie"))
+            cookiesScholar.put(cookie.substring(0,cookie.indexOf("=")),cookie.substring(0,cookie.indexOf(";")));
 
         connection.disconnect();
 
@@ -113,14 +109,16 @@ public class CentralAuthenticationService {
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
         connection.setInstanceFollowRedirects(false);
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("Cookie", casCookies.get(2) + "; " + casCookies.get(3) + "; " + casCookies.get(4));
+        connection.setRequestProperty("Cookie", cookiesScholar.get("scholar.vt.edu.JSESSIONID") + "; " +
+                                                cookiesScholar.get("lb-scholar.vt.edu") + "; " +
+                                                cookiesScholar.get("expire-scholar"));
         connection.setRequestProperty("User-Agent", USER_AGENT);
         connection.connect();
 
         redirectURL = connection.getHeaderField("Location");
 
         newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
-        casCookies.set(4, newCookie.substring(0,newCookie.indexOf(";")));  //new expire-scholar
+        cookiesScholar.put(newCookie.substring(0,newCookie.indexOf("=")),newCookie.substring(0,newCookie.indexOf(";")));
 
         connection.disconnect();
 
@@ -128,7 +126,7 @@ public class CentralAuthenticationService {
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
         connection.setInstanceFollowRedirects(false);
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("Cookie", casCookies.get(0) + "; " + casCookies.get(1));
+        connection.setRequestProperty("Cookie", cookiesCAS_.get("JSESSIONID") + "; " + cookiesCAS_.get("CASTGC"));
         connection.setRequestProperty("User-Agent", USER_AGENT);
         connection.connect();
         redirectURL = connection.getHeaderField("Location");
@@ -138,7 +136,7 @@ public class CentralAuthenticationService {
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
         connection.setInstanceFollowRedirects(false);
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("Cookie", casCookies.get(0) + "; " + casCookies.get(1));
+        connection.setRequestProperty("Cookie", cookiesCAS_.get("JSESSIONID") + "; " + cookiesCAS_.get("CASTGC"));
         connection.setRequestProperty("User-Agent", USER_AGENT);
         connection.connect();
         redirectURL = connection.getHeaderField("Location");
@@ -148,30 +146,36 @@ public class CentralAuthenticationService {
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
         connection.setInstanceFollowRedirects(false);
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("Cookie", casCookies.get(2) + "; " + casCookies.get(3) + "; " + casCookies.get(4));
+        connection.setRequestProperty("Cookie", cookiesScholar.get("scholar.vt.edu.JSESSIONID") + "; " +
+                cookiesScholar.get("lb-scholar.vt.edu") + "; " +
+                cookiesScholar.get("expire-scholar"));
         connection.setRequestProperty("User-Agent", USER_AGENT);
         connection.connect();
         redirectURL = connection.getHeaderField("Location");
         newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
-        casCookies.set(4, newCookie.substring(0,newCookie.indexOf(";")));  //new expire-scholar
+        cookiesScholar.put(newCookie.substring(0,newCookie.indexOf("=")),newCookie.substring(0,newCookie.indexOf(";")));
         connection.disconnect();
 
         //container?ticker
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
         connection.setInstanceFollowRedirects(false);
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("Cookie", casCookies.get(2) + "; " + casCookies.get(3) + "; " + casCookies.get(4));
+        connection.setRequestProperty("Cookie", cookiesScholar.get("scholar.vt.edu.JSESSIONID") + "; " +
+                cookiesScholar.get("lb-scholar.vt.edu") + "; " +
+                cookiesScholar.get("expire-scholar"));
         connection.setRequestProperty("User-Agent", USER_AGENT);
         connection.connect();
         newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
-        casCookies.set(4, newCookie.substring(0,newCookie.indexOf(";")));  //new expire-scholar
+        cookiesScholar.put(newCookie.substring(0,newCookie.indexOf("=")),newCookie.substring(0,newCookie.indexOf(";")));
         connection.disconnect();
 
         //portal
         connection = (HttpsURLConnection)(new URL("https://scholar.vt.edu/portal").openConnection());
         connection.setInstanceFollowRedirects(false);
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("Cookie", casCookies.get(2) + "; " + casCookies.get(3) + "; " + casCookies.get(4));
+        connection.setRequestProperty("Cookie", cookiesScholar.get("scholar.vt.edu.JSESSIONID") + "; " +
+                cookiesScholar.get("lb-scholar.vt.edu") + "; " +
+                cookiesScholar.get("expire-scholar"));
         connection.setRequestProperty("User-Agent", USER_AGENT);
         connection.connect();
 
