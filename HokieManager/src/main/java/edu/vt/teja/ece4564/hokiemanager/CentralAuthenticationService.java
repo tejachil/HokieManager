@@ -23,6 +23,7 @@ public class CentralAuthenticationService {
     private final static String ORIGIN = "https://auth.vt.edu";
     private final static String LOGIN_URL = "https://auth.vt.edu/login";
     private final static String LOGOUT_URL = "https://auth.vt.edu/logout";
+    private final static String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.66 Safari/537.36";
 
     private String username_;
     private String password_;
@@ -30,8 +31,7 @@ public class CentralAuthenticationService {
     public CentralAuthenticationService(String username, String password){
         username_ = username;
         password_ = password;
-        //System.out.println("------------REACHED CAS CONSTRUCTOR!!!!------------");
-        Log.i("CAS", "REACHED CAS CONSTRUCTOR");
+
         try{
             login();
         }
@@ -41,47 +41,38 @@ public class CentralAuthenticationService {
     }
 
     private boolean login() throws IOException {
-        String redirectURL;
+        String redirectURL, newCookie, pageHtml;
         ArrayList<String> casCookies = new ArrayList<String>();
 
+        // Redirect 1
         HttpsURLConnection connection = (HttpsURLConnection)(new URL(LOGIN_URL).openConnection());
         connection.setInstanceFollowRedirects(false);
         connection.connect();
 
-        /*
-
-        try{
-            //
-
-        }
-        catch (IOException e){
-
-        }*/
-
-        casCookies.add(connection.getHeaderFields().get("Set-Cookie").toString());
+        newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
+        casCookies.add(newCookie.substring(0,newCookie.indexOf(";")));
 
         redirectURL = connection.getHeaderField("Location");
         Log.i("URL", redirectURL);
         connection.disconnect();
 
+        // Redirect 2
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
         connection.setRequestProperty("Cookie", casCookies.get(0));
         connection.connect();
 
-        String pageHtml = getHTML(connection);
-
+        pageHtml = getHTML(connection);
         HashMap formHashMap = parseLoginForm(pageHtml.substring(pageHtml.indexOf("class=\"buttons\">"), pageHtml.indexOf("</form>")));
-
-        Log.i("FORM", formHashMap.toString());
-
         connection.disconnect();
 
-        connection = (HttpsURLConnection)(new URL(LOGIN_URL).openConnection());
+        // Redirect 3
+        connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
         connection.setRequestMethod("POST");
-        connection.setRequestProperty("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.66 Safari/537.36");
         connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         connection.setRequestProperty("Cookie", casCookies.get(0));
+        connection.setRequestProperty("User-Agent", USER_AGENT);
         connection.connect();
+
         DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream());
         outputStream.writeBytes("username=" + URLEncoder.encode(username_, HTTP.UTF_8) +
                                 "&password=" + URLEncoder.encode(password_, HTTP.UTF_8) +
@@ -92,19 +83,102 @@ public class CentralAuthenticationService {
         outputStream.flush();
         outputStream.close();
 
-        Log.i("HTML", getHTML(connection));
+        newCookie = connection.getHeaderFields().get("Set-Cookie").get(1).toString();
+        casCookies.add(newCookie.substring(0, newCookie.indexOf(";")));
 
         connection.disconnect();
 
+        // Redirect 3 SCHOLAR
         connection = (HttpsURLConnection)(new URL("https://scholar.vt.edu/portal/login").openConnection());
-        //connection.setInstanceFollowRedirects(true);
+        connection.setInstanceFollowRedirects(false);
         connection.setRequestMethod("GET");
-        connection.setRequestProperty("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.66 Safari/537.36");
-        connection.setRequestProperty("Cookie", casCookies.get(0));
-        connection.setDoInput(true);
-        connection.setDoOutput(true);
+        connection.setRequestProperty("User-Agent", USER_AGENT);
         connection.connect();
-        Log.i("SCHOLAR", getHTML(connection));
+
+        redirectURL = connection.getHeaderField("Location");
+
+        newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
+        casCookies.add(newCookie.substring(0,newCookie.indexOf(";")));  //scholar.vt.edu.JSESSIONID
+
+        newCookie = connection.getHeaderFields().get("Set-Cookie").get(1).toString();
+        casCookies.add(newCookie.substring(0,newCookie.indexOf(";")));  //lb-scholar.vt.edu
+
+        newCookie = connection.getHeaderFields().get("Set-Cookie").get(2).toString();
+        casCookies.add(newCookie.substring(0,newCookie.indexOf(";")));  //expire-scholar
+
+        connection.disconnect();
+
+
+        //SCHOLAR container
+        connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
+        connection.setInstanceFollowRedirects(false);
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Cookie", casCookies.get(2) + "; " + casCookies.get(3) + "; " + casCookies.get(4));
+        connection.setRequestProperty("User-Agent", USER_AGENT);
+        connection.connect();
+
+        redirectURL = connection.getHeaderField("Location");
+
+        newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
+        casCookies.set(4, newCookie.substring(0,newCookie.indexOf(";")));  //new expire-scholar
+
+        connection.disconnect();
+
+        //?service=https
+        connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
+        connection.setInstanceFollowRedirects(false);
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Cookie", casCookies.get(0) + "; " + casCookies.get(1));
+        connection.setRequestProperty("User-Agent", USER_AGENT);
+        connection.connect();
+        redirectURL = connection.getHeaderField("Location");
+        connection.disconnect();
+
+        //login?service=
+        connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
+        connection.setInstanceFollowRedirects(false);
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Cookie", casCookies.get(0) + "; " + casCookies.get(1));
+        connection.setRequestProperty("User-Agent", USER_AGENT);
+        connection.connect();
+        redirectURL = connection.getHeaderField("Location");
+        connection.disconnect();
+
+        //container?ticket
+        connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
+        connection.setInstanceFollowRedirects(false);
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Cookie", casCookies.get(2) + "; " + casCookies.get(3) + "; " + casCookies.get(4));
+        connection.setRequestProperty("User-Agent", USER_AGENT);
+        connection.connect();
+        redirectURL = connection.getHeaderField("Location");
+        newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
+        casCookies.set(4, newCookie.substring(0,newCookie.indexOf(";")));  //new expire-scholar
+        connection.disconnect();
+
+        //container?ticker
+        connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
+        connection.setInstanceFollowRedirects(false);
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Cookie", casCookies.get(2) + "; " + casCookies.get(3) + "; " + casCookies.get(4));
+        connection.setRequestProperty("User-Agent", USER_AGENT);
+        connection.connect();
+        newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
+        casCookies.set(4, newCookie.substring(0,newCookie.indexOf(";")));  //new expire-scholar
+        connection.disconnect();
+
+        //portal
+        connection = (HttpsURLConnection)(new URL("https://scholar.vt.edu/portal").openConnection());
+        connection.setInstanceFollowRedirects(false);
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Cookie", casCookies.get(2) + "; " + casCookies.get(3) + "; " + casCookies.get(4));
+        connection.setRequestProperty("User-Agent", USER_AGENT);
+        connection.connect();
+
+        pageHtml = getHTML(connection);
+
+        Log.d("FINAL-SCHOLAR", pageHtml);
+
         connection.disconnect();
 
         return true;
