@@ -1,9 +1,7 @@
 package edu.vt.teja.ece4564.hokiemanager;
 
 import android.util.Log;
-
 import org.apache.http.protocol.HTTP;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -18,8 +16,6 @@ import javax.net.ssl.HttpsURLConnection;
  * Created by teja on 10/8/13.
  */
 public class CentralAuthenticationService {
-    private final static String HOST = "auth.vt.edu";
-    private final static String ORIGIN = "https://auth.vt.edu";
     private final static String LOGIN_URL = "https://auth.vt.edu/login";
     private final static String LOGOUT_URL = "https://auth.vt.edu/logout";
     private final static String USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/30.0.1599.66 Safari/537.36";
@@ -28,20 +24,22 @@ public class CentralAuthenticationService {
     private String password_;
     private HashMap<String,String> cookiesCAS_ = new HashMap<String,String>();
 
-    public CentralAuthenticationService(String username, String password){
+    public CentralAuthenticationService(){
+
+    }
+
+    public boolean login(String username, String password) throws IOException {
+        if (username_ == username && password_ == password && validateAuthentication())
+            return true;
+        else
+            logout();
+
+        String redirectURL, newCookie, pageHtml;
+
         username_ = username;
         password_ = password;
 
-        try{
-            login();
-        }
-        catch (IOException e){
-            Log.e("ERROR", "IOException");
-        }
-    }
-
-    private boolean login() throws IOException {
-        String redirectURL, newCookie, pageHtml;
+        Log.d("Location", "Reached login: " + username_ + " " + password_);
 
         // Redirect 1
         HttpsURLConnection connection = (HttpsURLConnection)(new URL(LOGIN_URL).openConnection());
@@ -64,6 +62,8 @@ public class CentralAuthenticationService {
         HashMap formHashMap = parseLoginForm(pageHtml.substring(pageHtml.indexOf("class=\"buttons\">"), pageHtml.indexOf("</form>")));
         connection.disconnect();
 
+        Log.d("Location", "Finished Redirect 2");
+
         // Redirect 3
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
         connection.setRequestMethod("POST");
@@ -82,110 +82,62 @@ public class CentralAuthenticationService {
         outputStream.flush();
         outputStream.close();
 
-        newCookie = connection.getHeaderFields().get("Set-Cookie").get(1).toString();
-        cookiesCAS_.put(newCookie.substring(0,newCookie.indexOf("=")),newCookie.substring(0,newCookie.indexOf(";")));
+        if(getHTML(connection).contains("You have successfully logged into the Virginia Tech Central Authentication Service.")) {
+            newCookie = connection.getHeaderFields().get("Set-Cookie").get(1).toString();
+            cookiesCAS_.put(newCookie.substring(0,newCookie.indexOf("=")),newCookie.substring(0,newCookie.indexOf(";")));
+        }
 
         connection.disconnect();
+        Log.d("Location", "Finished Redirect 3");
+
+        return validateAuthentication();
+    }
 
 
-        HashMap<String,String> cookiesScholar = new HashMap<String,String>();
-        // Redirect 3 SCHOLAR
-        connection = (HttpsURLConnection)(new URL("https://scholar.vt.edu/portal/login").openConnection());
-        connection.setInstanceFollowRedirects(false);
-        connection.setRequestMethod("GET");
-        connection.setRequestProperty("User-Agent", USER_AGENT);
-        connection.connect();
+    public boolean logout(){
+        String pageHtml = new String();
 
-        redirectURL = connection.getHeaderField("Location");
+        try{
+            HttpsURLConnection connection = (HttpsURLConnection)(new URL(LOGIN_URL).openConnection());
+            connection.setInstanceFollowRedirects(false);
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Cookie", cookiesCAS_.get("JSESSIONID") + "; " + cookiesCAS_.get("CASTGC"));
+            connection.setRequestProperty("User-Agent", USER_AGENT);
+            connection.connect();
+            pageHtml = getHTML(connection);
+            connection.disconnect();
+            Log.d("VALIDATION", pageHtml);
+        }
+        catch (IOException e){
 
-        // Add the following cookies: scholar.vt.edu.JSESSIONID, lb-scholar.vt.edu, expire-scholar
-        for(String cookie : connection.getHeaderFields().get("Set-Cookie"))
-            cookiesScholar.put(cookie.substring(0,cookie.indexOf("=")),cookie.substring(0,cookie.indexOf(";")));
+        }
+        cookiesCAS_.clear();
+        return pageHtml.contains("You have successfully logged out of the Virginia Tech Central Authentication Service.");
+    }
 
-        connection.disconnect();
+    public boolean validateAuthentication(){
+        String pageHtml = new String();
 
+        try{
+            HttpsURLConnection connection = (HttpsURLConnection)(new URL(LOGIN_URL).openConnection());
+            connection.setInstanceFollowRedirects(false);
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("Cookie", cookiesCAS_.get("JSESSIONID") + "; " + cookiesCAS_.get("CASTGC"));
+            connection.setRequestProperty("User-Agent", USER_AGENT);
+            connection.connect();
+            pageHtml = getHTML(connection);
+            connection.disconnect();
+            Log.d("VALIDATION", pageHtml);
+        }
+        catch (IOException e){
 
-        //SCHOLAR container
-        connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
-        connection.setInstanceFollowRedirects(false);
-        connection.setRequestMethod("GET");
-        connection.setRequestProperty("Cookie", cookiesScholar.get("scholar.vt.edu.JSESSIONID") + "; " +
-                                                cookiesScholar.get("lb-scholar.vt.edu") + "; " +
-                                                cookiesScholar.get("expire-scholar"));
-        connection.setRequestProperty("User-Agent", USER_AGENT);
-        connection.connect();
+        }
 
-        redirectURL = connection.getHeaderField("Location");
+        return pageHtml.contains("You have successfully logged into the Virginia Tech Central Authentication Service.");
+    }
 
-        newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
-        cookiesScholar.put(newCookie.substring(0,newCookie.indexOf("=")),newCookie.substring(0,newCookie.indexOf(";")));
-
-        connection.disconnect();
-
-        //?service=https
-        connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
-        connection.setInstanceFollowRedirects(false);
-        connection.setRequestMethod("GET");
-        connection.setRequestProperty("Cookie", cookiesCAS_.get("JSESSIONID") + "; " + cookiesCAS_.get("CASTGC"));
-        connection.setRequestProperty("User-Agent", USER_AGENT);
-        connection.connect();
-        redirectURL = connection.getHeaderField("Location");
-        connection.disconnect();
-
-        //login?service=
-        connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
-        connection.setInstanceFollowRedirects(false);
-        connection.setRequestMethod("GET");
-        connection.setRequestProperty("Cookie", cookiesCAS_.get("JSESSIONID") + "; " + cookiesCAS_.get("CASTGC"));
-        connection.setRequestProperty("User-Agent", USER_AGENT);
-        connection.connect();
-        redirectURL = connection.getHeaderField("Location");
-        connection.disconnect();
-
-        //container?ticket
-        connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
-        connection.setInstanceFollowRedirects(false);
-        connection.setRequestMethod("GET");
-        connection.setRequestProperty("Cookie", cookiesScholar.get("scholar.vt.edu.JSESSIONID") + "; " +
-                cookiesScholar.get("lb-scholar.vt.edu") + "; " +
-                cookiesScholar.get("expire-scholar"));
-        connection.setRequestProperty("User-Agent", USER_AGENT);
-        connection.connect();
-        redirectURL = connection.getHeaderField("Location");
-        newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
-        cookiesScholar.put(newCookie.substring(0,newCookie.indexOf("=")),newCookie.substring(0,newCookie.indexOf(";")));
-        connection.disconnect();
-
-        //container?ticker
-        connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
-        connection.setInstanceFollowRedirects(false);
-        connection.setRequestMethod("GET");
-        connection.setRequestProperty("Cookie", cookiesScholar.get("scholar.vt.edu.JSESSIONID") + "; " +
-                cookiesScholar.get("lb-scholar.vt.edu") + "; " +
-                cookiesScholar.get("expire-scholar"));
-        connection.setRequestProperty("User-Agent", USER_AGENT);
-        connection.connect();
-        newCookie = connection.getHeaderFields().get("Set-Cookie").get(0).toString();
-        cookiesScholar.put(newCookie.substring(0,newCookie.indexOf("=")),newCookie.substring(0,newCookie.indexOf(";")));
-        connection.disconnect();
-
-        //portal
-        connection = (HttpsURLConnection)(new URL("https://scholar.vt.edu/portal").openConnection());
-        connection.setInstanceFollowRedirects(false);
-        connection.setRequestMethod("GET");
-        connection.setRequestProperty("Cookie", cookiesScholar.get("scholar.vt.edu.JSESSIONID") + "; " +
-                cookiesScholar.get("lb-scholar.vt.edu") + "; " +
-                cookiesScholar.get("expire-scholar"));
-        connection.setRequestProperty("User-Agent", USER_AGENT);
-        connection.connect();
-
-        pageHtml = getHTML(connection);
-
-        Log.d("FINAL-SCHOLAR", pageHtml);
-
-        connection.disconnect();
-
-        return true;
+    public HashMap<String,String> getCookies(){
+        return cookiesCAS_;
     }
 
     private String getHTML(HttpsURLConnection connection) throws IOException {
@@ -196,6 +148,7 @@ public class CentralAuthenticationService {
         while((htmlBuffer = inReader.readLine()) != null){
             htmlStringBuilder.append(htmlBuffer);
         }
+
         return htmlStringBuilder.toString();
     }
 
