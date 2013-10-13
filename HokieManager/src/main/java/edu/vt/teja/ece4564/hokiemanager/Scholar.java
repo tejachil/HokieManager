@@ -5,13 +5,19 @@ import android.util.Log;
 import org.apache.http.protocol.HTTP;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -26,6 +32,10 @@ public class Scholar {
 
     private HashMap<String,String> cookiesCAS_;
     private HashMap<String,String> cookiesScholar_ = new HashMap<String,String>();
+
+    private ArrayList<String> assignments_ = new ArrayList<String>();
+    private ArrayList<String> classes_ = new ArrayList<String>();
+    private ArrayList<String> officehours_ = new ArrayList<String>();
 
     public Scholar(CentralAuthenticationService auth){
         cookiesCAS_ = auth.getCookies();
@@ -197,8 +207,70 @@ public class Scholar {
 
         Document doc = Jsoup.parse(pageHtml);
 
-        Log.d("LIST-OF-EVENTS", pageHtml.substring(pageHtml.indexOf("<table"),pageHtml.indexOf("</table>")));
+        Element table = doc.select("table").first();
+        //Iterator<Element> rows = table.select("tr").iterator();
+        //ArrayList<String> columnBuffer = new ArrayList<String>();
 
+        int count;
+        String[] entry = new String[5];
+        String type, day, month, year;
+        for (Element row : table.select("tr")) {
+            type = "";
+            Log.d("TABLE-PRINT-ROW", row.toString());
+            count = 0;
+            Arrays.fill(entry, "");
+            for (Element column : row.select("td")) {
+                pageHtml = column.toString();
+                if(pageHtml.contains("From Site: \"") || pageHtml.contains("<td>&nbsp;</td>"))
+                    continue;
+                Log.d("TABLE-ENTRIES-MAINHTML", pageHtml);
+                if (count == 0){
+                    Log.d("TABLE-ENTRIES-0", "reached start of count");
+                    //pageHtml= pageHtml.substring(pageHtml.indexOf("<a href=\""));
+                    if(!pageHtml.contains("day"))   continue;
+                    pageHtml = pageHtml.substring(pageHtml.indexOf("?day=")+5);
+                    Log.d("DATE-HTML", pageHtml);
+                    day = pageHtml.substring(0, pageHtml.indexOf("&"));
+                    pageHtml = pageHtml.substring(pageHtml.indexOf("month=")+6);
+                    month = pageHtml.substring(0, pageHtml.indexOf("&"));
+                    pageHtml = pageHtml.substring(pageHtml.indexOf("year=")+5);
+                    year = pageHtml.substring(0, pageHtml.indexOf("&"));
+                    entry[0] = month + "/" + day + "/" + year;
+                    Log.d("TABLE-ENTRIES-0", entry[0]);
+                }
+                else if (count == 4){
+                    entry[4] = pageHtml.substring(pageHtml.indexOf("title=\"") + 7);
+                    entry[4] = entry[4].substring(0, entry[4].indexOf("\">"));
+                    type = pageHtml.substring(pageHtml.indexOf("alt=\"") + 5);
+                    type = type.substring(0, type.indexOf("\""));
+                    Log.d("TABLE-ENTRIES-4", entry[4] + "--------" + type);
+                }
+                else{
+                    entry[count] = pageHtml.substring(pageHtml.indexOf(">")+1, pageHtml.indexOf("</td>")).trim();
+                    Log.d("TABLE-ENTRIES-ELSE", entry[count]);
+                }
+                ++count;
+            }
+            Log.d("EACH-ENTRY", entry.toString());
+            if(type.contains("Class") || type.contains("Lecture"))
+                classes_.add(entry[3] + "\n\t" + entry[0] + " " + entry[1] + "\n\t" + entry[4]);
+            else if (type.contains("Meeting"))
+                officehours_.add(entry[3] + "\n\t" + entry[0] + " " + entry[1] + "\n\t" + entry[4]);
+            else if (type.contains("Deadline"))
+                assignments_.add(entry[3] + "\n\t" + entry[0] + " " + entry[1] + "\n\t" + entry[4]);
+        }
+    }
+
+    public ArrayList<String> getAssignments(){
+        return assignments_;
+    }
+
+    public ArrayList<String> getClasses(){
+        return classes_;
+    }
+
+    public ArrayList<String> getOfficeHours(){
+        return officehours_;
     }
 
     private String getHTML(HttpsURLConnection connection) throws IOException {
