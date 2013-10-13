@@ -1,7 +1,9 @@
 package edu.vt.teja.ece4564.hokiemanager;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -34,7 +36,7 @@ public class AuthenticateTask extends AsyncTask<String, Void, String> {
     protected String doInBackground(String... params){
         Log.d("Location", "Reached Do In background: " + params[0] + " " + params[1]);
         try{
-            loginSuccess_ = cas_.login(params[0], params[1]);
+            loginSuccess_ = cas_.loginCAS(params[0], params[1]);
         }
         catch (IOException e){
 
@@ -45,8 +47,12 @@ public class AuthenticateTask extends AsyncTask<String, Void, String> {
     @Override
     protected void onPostExecute(String result) {
         progressLogin_.setVisibility(View.INVISIBLE);
-        if(loginSuccess_)
+        if(loginSuccess_){
             Toast.makeText(context_, "Succesfully logged in to Virginia Tech CAS!", Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(context_, ScholarActivity.class);
+
+            context_.startActivity(intent);
+        }
         else
             Toast.makeText(context_, "Unable to log in to Virginia Tech CAS", Toast.LENGTH_LONG).show();
     }

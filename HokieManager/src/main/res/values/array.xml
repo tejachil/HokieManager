@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="spinner_eventsItems">
+        <item>Classes and Lectures</item>
+        <item>Assignments</item>
+        <item>Office Hours</item>
+    </string-array>
+</resources>

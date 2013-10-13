@@ -4,5 +4,9 @@
     <string name="app_name">Hokie Manager</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
+    <string name="title_activity_scholar">Virginia Tech Scholar</string>
+    <string name="title_scholar1">Upcoming Events</string>
+    <string name="title_scholar2">Announcements</string>
+    <string name="title_scholar3">Resources</string>
 
 </resources>

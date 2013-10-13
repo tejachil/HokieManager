@@ -1,5 +1,6 @@
 package edu.vt.teja.ece4564.hokiemanager;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
@@ -12,9 +13,13 @@ import java.io.IOException;
  */
 public class ScholarTask extends AsyncTask<String, Void, String> {
     private CentralAuthenticationService cas_;
+    private Context context_;
+    private Scholar scholar_;
 
-    public ScholarTask(CentralAuthenticationService CAS) {
+    public ScholarTask(Context context, CentralAuthenticationService CAS) {
+        context_ = context;
         cas_ = CAS;
+        scholar_ = new Scholar(cas_);
     }
 
     @Override
@@ -23,9 +28,10 @@ public class ScholarTask extends AsyncTask<String, Void, String> {
 
     @Override
     protected String doInBackground(String... params){
-        Log.d("Location", "Reached Do In background of Scholar: " + params[0] + " " + params[1]);
+        Log.d("Location", "Reached Do In background of Scholar: ");
         try{
-            cas_.login(params[0], params[1]);
+            scholar_.loginScholar();
+            scholar_.getEvents();
         }
         catch (IOException e){
 

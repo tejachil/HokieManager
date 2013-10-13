@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.HashMap;
 import javax.net.ssl.HttpsURLConnection;
 
@@ -28,7 +27,7 @@ public class CentralAuthenticationService {
 
     }
 
-    public boolean login(String username, String password) throws IOException {
+    public boolean loginCAS(String username, String password) throws IOException {
         if (username_ == username && password_ == password && validateAuthentication())
             return true;
         else

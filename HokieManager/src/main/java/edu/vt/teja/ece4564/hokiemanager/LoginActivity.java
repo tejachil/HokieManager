@@ -11,13 +11,13 @@ import android.widget.ProgressBar;
 
 public class LoginActivity extends Activity {
 
-    private static CentralAuthenticationService cas_ = new CentralAuthenticationService();
+    private static CentralAuthenticationService cas_;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
+        cas_ = GlobalApplication.CAS_;
         final Button btnAuthenticate = (Button) findViewById(R.id.button_authenticate);
         final EditText fieldPID = (EditText) findViewById(R.id.editText_PID);
         final EditText fieldPassword = (EditText) findViewById(R.id.editText_password);
