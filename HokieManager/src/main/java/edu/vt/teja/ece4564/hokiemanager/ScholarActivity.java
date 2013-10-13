@@ -1,21 +1,14 @@
 package edu.vt.teja.ece4564.hokiemanager;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-
-import android.annotation.TargetApi;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.NavUtils;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -41,7 +34,6 @@ public class ScholarActivity extends FragmentActivity {
      * The {@link ViewPager} that will host the section contents.
      */
     ViewPager mViewPager;
-    private CentralAuthenticationService cas_;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,8 +69,11 @@ public class ScholarActivity extends FragmentActivity {
                 expListView = (ExpandableListView) this.findViewById(R.id.listView_scholarEvents);
 
                 ScholarTask scholarThread = new ScholarTask(this, GlobalApplication.CAS_, expListView, menuItem);
-                Log.d("Location", "Reached before execute of scholar");
                 scholarThread.execute("");
+                break;
+            case R.id.action_logout:
+                //GlobalApplication.CAS_.logoutCAS();
+                this.finish();
                 break;
             default:
                 break;

@@ -2,13 +2,9 @@ package edu.vt.teja.ece4564.hokiemanager;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ExpandableListView;
-import android.widget.ProgressBar;
 import android.widget.Toast;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,8 +34,8 @@ public class ScholarTask extends AsyncTask<String, Void, String> {
 
     @Override
     protected String doInBackground(String... params){
-        Log.d("Location", "Reached Do In background of Scholar: ");
         try{
+            if(!cas_.validateAuthentication())  cas_.loginCAS("","");
             scholar_.loginScholar();
             scholar_.getEvents();
         }

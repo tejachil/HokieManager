@@ -1,13 +1,9 @@
 package edu.vt.teja.ece4564.hokiemanager;
 
-import android.util.Log;
-
 import org.apache.http.protocol.HTTP;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -17,7 +13,6 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -58,7 +53,6 @@ public class Scholar {
             cookiesScholar_.put(cookie.substring(0,cookie.indexOf("=")),cookie.substring(0,cookie.indexOf(";")));
 
         connection.disconnect();
-        Log.d("Location", "Finished Redirect 4- Scholar");
 
         //SCHOLAR container
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
@@ -129,7 +123,7 @@ public class Scholar {
 
     public void getEvents() throws IOException{
         String redirectURL, pageHtml;
-        Log.d("LOCATION", "entered getEvents");
+
         //portal
         HttpsURLConnection connection = (HttpsURLConnection)(new URL(SCHOLAR_PORTAL_URL).openConnection());
         connection.setInstanceFollowRedirects(false);
@@ -139,7 +133,6 @@ public class Scholar {
                 cookiesScholar_.get("expire-scholar"));
         connection.setRequestProperty("User-Agent", USER_AGENT);
         connection.connect();
-        Log.d("LOCATION", "first connect in scholar for html");
 
         pageHtml = getHTML(connection);
 
@@ -150,8 +143,6 @@ public class Scholar {
         //Log.d("LOCATION-HTML", pageHtml);
         redirectURL = pageHtml.substring(pageHtml.indexOf("href=\"")+6);
         connection.disconnect();
-
-        Log.d("LOCATION", "Calendar URL:" +redirectURL);
 
         //calendar
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
@@ -167,7 +158,6 @@ public class Scholar {
         redirectURL = pageHtml.substring(pageHtml.indexOf("src=\"")+5, pageHtml.indexOf("\">"));
         connection.disconnect();
 
-        Log.d("LOCATION", "Iframe URL:" +redirectURL);
         //calendar iframe
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
         connection.setInstanceFollowRedirects(false);
@@ -181,8 +171,6 @@ public class Scholar {
         pageHtml = pageHtml.substring(pageHtml.indexOf("name=\"sakai_csrf_token\" value=\"") + 31);
         String sakai_csrf_token = pageHtml.substring(0, pageHtml.indexOf("\" />"));
         connection.disconnect();
-
-        Log.d("LOCATION", "Tocken:" +sakai_csrf_token);
 
         //calendar POST for list of events
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
@@ -216,42 +204,34 @@ public class Scholar {
         String type, day, month, year;
         for (Element row : table.select("tr")) {
             type = "";
-            Log.d("TABLE-PRINT-ROW", row.toString());
             count = 0;
             Arrays.fill(entry, "");
             for (Element column : row.select("td")) {
                 pageHtml = column.toString();
                 if(pageHtml.contains("From Site: \"") || pageHtml.contains("<td>&nbsp;</td>"))
                     continue;
-                Log.d("TABLE-ENTRIES-MAINHTML", pageHtml);
                 if (count == 0){
-                    Log.d("TABLE-ENTRIES-0", "reached start of count");
-                    //pageHtml= pageHtml.substring(pageHtml.indexOf("<a href=\""));
                     if(!pageHtml.contains("day"))   continue;
                     pageHtml = pageHtml.substring(pageHtml.indexOf("?day=")+5);
-                    Log.d("DATE-HTML", pageHtml);
                     day = pageHtml.substring(0, pageHtml.indexOf("&"));
                     pageHtml = pageHtml.substring(pageHtml.indexOf("month=")+6);
                     month = pageHtml.substring(0, pageHtml.indexOf("&"));
                     pageHtml = pageHtml.substring(pageHtml.indexOf("year=")+5);
                     year = pageHtml.substring(0, pageHtml.indexOf("&"));
                     entry[0] = month + "/" + day + "/" + year;
-                    Log.d("TABLE-ENTRIES-0", entry[0]);
                 }
                 else if (count == 4){
                     entry[4] = pageHtml.substring(pageHtml.indexOf("title=\"") + 7);
                     entry[4] = entry[4].substring(0, entry[4].indexOf("\">"));
                     type = pageHtml.substring(pageHtml.indexOf("alt=\"") + 5);
                     type = type.substring(0, type.indexOf("\""));
-                    Log.d("TABLE-ENTRIES-4", entry[4] + "--------" + type);
                 }
                 else{
                     entry[count] = pageHtml.substring(pageHtml.indexOf(">")+1, pageHtml.indexOf("</td>")).trim();
-                    Log.d("TABLE-ENTRIES-ELSE", entry[count]);
                 }
                 ++count;
             }
-            Log.d("EACH-ENTRY", entry.toString());
+
             if(type.contains("Class") || type.contains("Lecture"))
                 classes_.add(entry[3] + "\n\t" + entry[0] + " " + entry[1] + "\n\t" + entry[4]);
             else if (type.contains("Meeting"))

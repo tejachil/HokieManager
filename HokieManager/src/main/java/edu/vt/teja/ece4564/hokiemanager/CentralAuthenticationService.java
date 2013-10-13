@@ -1,6 +1,5 @@
 package edu.vt.teja.ece4564.hokiemanager;
 
-import android.util.Log;
 import org.apache.http.protocol.HTTP;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -31,14 +30,14 @@ public class CentralAuthenticationService {
         if (username_ == username && password_ == password && validateAuthentication())
             return true;
         else
-            logout();
+            logoutCAS();
 
         String redirectURL, newCookie, pageHtml;
 
-        username_ = username;
-        password_ = password;
-
-        Log.d("Location", "Reached login: " + username_ + " " + password_);
+        if(username != "" && password != ""){
+            username_ = username;
+            password_ = password;
+        }
 
         // Redirect 1
         HttpsURLConnection connection = (HttpsURLConnection)(new URL(LOGIN_URL).openConnection());
@@ -49,7 +48,6 @@ public class CentralAuthenticationService {
         cookiesCAS_.put(newCookie.substring(0,newCookie.indexOf("=")),newCookie.substring(0,newCookie.indexOf(";")));
 
         redirectURL = connection.getHeaderField("Location");
-        Log.i("URL", redirectURL);
         connection.disconnect();
 
         // Redirect 2
@@ -60,8 +58,6 @@ public class CentralAuthenticationService {
         pageHtml = getHTML(connection);
         HashMap formHashMap = parseLoginForm(pageHtml.substring(pageHtml.indexOf("class=\"buttons\">"), pageHtml.indexOf("</form>")));
         connection.disconnect();
-
-        Log.d("Location", "Finished Redirect 2");
 
         // Redirect 3
         connection = (HttpsURLConnection)(new URL(redirectURL).openConnection());
@@ -87,17 +83,16 @@ public class CentralAuthenticationService {
         }
 
         connection.disconnect();
-        Log.d("Location", "Finished Redirect 3");
 
         return validateAuthentication();
     }
 
 
-    public boolean logout(){
+    public boolean logoutCAS(){
         String pageHtml = new String();
 
         try{
-            HttpsURLConnection connection = (HttpsURLConnection)(new URL(LOGIN_URL).openConnection());
+            HttpsURLConnection connection = (HttpsURLConnection)(new URL(LOGOUT_URL).openConnection());
             connection.setInstanceFollowRedirects(false);
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Cookie", cookiesCAS_.get("JSESSIONID") + "; " + cookiesCAS_.get("CASTGC"));
@@ -105,7 +100,6 @@ public class CentralAuthenticationService {
             connection.connect();
             pageHtml = getHTML(connection);
             connection.disconnect();
-            Log.d("VALIDATION", pageHtml);
         }
         catch (IOException e){
 
@@ -126,7 +120,7 @@ public class CentralAuthenticationService {
             connection.connect();
             pageHtml = getHTML(connection);
             connection.disconnect();
-            Log.d("VALIDATION", pageHtml);
+            //Log.d("VALIDATION", pageHtml);
         }
         catch (IOException e){
 

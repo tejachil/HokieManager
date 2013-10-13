@@ -3,8 +3,6 @@ package edu.vt.teja.ece4564.hokiemanager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -34,7 +32,6 @@ public class AuthenticateTask extends AsyncTask<String, Void, String> {
 
     @Override
     protected String doInBackground(String... params){
-        Log.d("Location", "Reached Do In background: " + params[0] + " " + params[1]);
         try{
             loginSuccess_ = cas_.loginCAS(params[0], params[1]);
         }

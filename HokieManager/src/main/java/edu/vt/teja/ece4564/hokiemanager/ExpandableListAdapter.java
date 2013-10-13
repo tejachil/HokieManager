@@ -2,7 +2,6 @@ package edu.vt.teja.ece4564.hokiemanager;
 
 import java.util.HashMap;
 import java.util.List;
-
 import android.content.Context;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;

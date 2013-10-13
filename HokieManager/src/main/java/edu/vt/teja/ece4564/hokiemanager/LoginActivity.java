@@ -2,7 +2,6 @@ package edu.vt.teja.ece4564.hokiemanager;
 
 import android.os.Bundle;
 import android.app.Activity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
@@ -25,9 +24,7 @@ public class LoginActivity extends Activity {
 
         btnAuthenticate.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
-                Log.d("Location", "Reached onClick");
                 AuthenticateTask authThread = new AuthenticateTask(LoginActivity.this, cas_, progressLogin);
-                Log.d("Location", "Reached before execute");
                 authThread.execute(fieldPID.getText().toString(), fieldPassword.getText().toString());
             }
         });
