@@ -8,6 +8,8 @@ Hokie Manager Authenticates with CAS and allows for access to Scholar to fetch u
 
 **License:** GNU General Purpose License Version 2 (LICENSE.txt)
 
+![alt tag](https://raw.github.com/tejachil/HokieManager/master/app_screenshot.png)
+
 ## Purpose
 The purpose of this app is to integrate Virginia Tech's Scholar service on a mobile Android platform. The app is able to authenticate with the Central Authentication Service (CAS) of Virginia Tech and then proceed to access the Scholar service. It is currently able to login to the scholar website and receive the upcoming events from the calendar widget on scholar. After parsing the retrieved events, the app organizes the events into three categories: Classes, Assignments, and Office Hours. These three categories are displayed to the user in a clean and organized layout.
 
