@@ -4,7 +4,7 @@ Hokie Manager Authenticates with CAS and allows for access to Scholar to fetch u
 
 **Created By:** Nayana Teja Chiluvuri (tejachil@vt.edu)
 
-**Source:** https://github.com/tejachil/HokieManager/
+**Source:** https://github.com/tejachil/HokieManager/tree/master/HokieManager/
 
 **License:** GNU General Purpose License Version 2 (LICENSE.txt)
 
