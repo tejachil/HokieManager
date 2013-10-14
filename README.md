@@ -47,3 +47,7 @@ The CAS methods and services are independent of the others. The Scholar service 
 
 ### UML Class Diagram
 ![alt tag](https://raw.github.com/tejachil/HokieManager/master/HokieManager/ClassDiagram.png)
+
+### Sequence Diagrams
+![alt tag](https://raw.github.com/tejachil/HokieManager/master/HokieManager/cas_sequence.png)
+![alt tag](https://raw.github.com/tejachil/HokieManager/master/HokieManager/scholar_sequence.png)
