@@ -4,9 +4,11 @@ Hokie Manager Authenticates with CAS and allows for access to Scholar to fetch u
 
 **Created By:** Nayana Teja Chiluvuri (tejachil@vt.edu)
 
-**Source:** https://github.com/tejachil/HokieManager/
+**Source:** https://github.com/tejachil/HokieManager/tree/master/HokieManager/
 
 **License:** GNU General Purpose License Version 2 (LICENSE.txt)
+
+![alt tag](https://raw.github.com/tejachil/HokieManager/master/app_screenshot.png)
 
 ## Purpose
 The purpose of this app is to integrate Virginia Tech's Scholar service on a mobile Android platform. The app is able to authenticate with the Central Authentication Service (CAS) of Virginia Tech and then proceed to access the Scholar service. It is currently able to login to the scholar website and receive the upcoming events from the calendar widget on scholar. After parsing the retrieved events, the app organizes the events into three categories: Classes, Assignments, and Office Hours. These three categories are displayed to the user in a clean and organized layout.
@@ -46,8 +48,9 @@ Data is passed between the activities using bundles. A class called GlobalApplic
 The CAS methods and services are independent of the others. The Scholar service requires the CAS service to authenticate. The application can easily be scaled with the current strucure of the software.
 
 ### UML Class Diagram
-![alt tag](https://raw.github.com/tejachil/HokieManager/master/HokieManager/ClassDiagram.png)
+![alt tag](https://raw.github.com/tejachil/HokieManager/master/ClassDiagram.png)
 
 ### Sequence Diagrams
-![alt tag](https://raw.github.com/tejachil/HokieManager/master/HokieManager/cas_sequence.png)
-![alt tag](https://raw.github.com/tejachil/HokieManager/master/HokieManager/scholar_sequence.png)
+![alt tag](https://raw.github.com/tejachil/HokieManager/master/cas_sequence.png)
+_____________________________________________________________________________
+![alt tag](https://raw.github.com/tejachil/HokieManager/master/scholar_sequence.png)
