@@ -20,7 +20,7 @@ The app is still in its initial stages of development so the current features of
 * Dynamic UI that allows for all network and time intensive tasks to run in the background
 * Implementation of refreshing of the session in the case of a session timeout
 * Login and logout functionality implemented in the UI
-* Upcoming tasks for the next week are retrieved, categorized, and displayed in an organized fashion upon request
+* Upcoming tasks for the next week are retrieved, categorized, and displayed in an organized fashion upon request (press of the refresh button on the action bar)
 * Scrollable Tabs UI implemented with fragments for the Scholar Activity to allow for easy expansion of the project
 * Action Bar implemented in the Scholar Activity to conform with the UI design etiquette of the latest Android API (Jellybean)
 
