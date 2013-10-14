@@ -46,8 +46,9 @@ Data is passed between the activities using bundles. A class called GlobalApplic
 The CAS methods and services are independent of the others. The Scholar service requires the CAS service to authenticate. The application can easily be scaled with the current strucure of the software.
 
 ### UML Class Diagram
-![alt tag](https://raw.github.com/tejachil/HokieManager/master/HokieManager/ClassDiagram.png)
+![alt tag](https://raw.github.com/tejachil/HokieManager/master/ClassDiagram.png)
 
 ### Sequence Diagrams
-![alt tag](https://raw.github.com/tejachil/HokieManager/master/HokieManager/cas_sequence.png)
-![alt tag](https://raw.github.com/tejachil/HokieManager/master/HokieManager/scholar_sequence.png)
+![alt tag](https://raw.github.com/tejachil/HokieManager/master/cas_sequence.png)
+_____________________________________________________________________________
+![alt tag](https://raw.github.com/tejachil/HokieManager/master/scholar_sequence.png)
